@@ -76,7 +76,7 @@
   </div>
 
   <div class="card">
-    <div class="label">2. เลือกบล็อก (เลือกพร้อมกันได้หลายบล็อก)</div>
+    <div class="label">2. เลือกบล็อก (เลือกทุกบล็อกอัตโนมัติ / จิ้มออกได้)</div>
     <div class="blocks" id="blocks"></div>
   </div>
 
@@ -158,7 +158,7 @@ const baseModes = [
 ];
 const customModes = {};
 let zone = 'S';
-let selectedBlocks = new Set(['A']);
+let selectedBlocks = new Set(zoneConfigs.S.blocks.map(b => b.key));
 let mode = 'empty';
 const selected = new Map(); // key = block|col, value = mode
 
@@ -340,12 +340,14 @@ document.getElementById('addCustom').onclick=()=>addCustomMode(document.getEleme
 document.getElementById('customName').addEventListener('keydown',e=>{if(e.key==='Enter') addCustomMode(e.target.value)});
 document.getElementById('clear').onclick=()=>{
   const before=selected.size;
-  [...selected.keys()].forEach(k=>{
-    const bk=k.split('|')[0];
-    if(selectedBlocks.has(bk)) selected.delete(k);
-  });
+  // ล้างข้อมูลที่จิ้มไว้ทั้งหมด รวมถึงทุก Block ที่เคยเลือกไว้
+  // เพื่อให้ส่วน "สรุปชุดที่จะบันทึก" ถูกเคลียร์พร้อมกันทันที
+  for(const key of [...selected.keys()]){
+    const [z] = key.split('|');
+    if(z === zone) selected.delete(key);
+  }
   renderAll();
-  setStatus(before?'ล้างการเลือกของ Block '+[...selectedBlocks].join(', ')+' แล้ว':'ไม่มีรายการให้ล้าง');
+  setStatus(before?'ล้างข้อมูลที่เลือกทั้งหมดแล้ว':'ไม่มีรายการให้ล้าง');
 };
 
 function setStatus(msg,type=''){
@@ -367,6 +369,8 @@ async function saveToGas(){
   btn.disabled=true;btn.textContent='☁️ กำลังบันทึก...';
   setStatus(`กำลังส่ง ${changes.length} รายการขึ้น Google Sheets...`);
 
+  // ส่งข้อมูลจาก Map ที่จิ้มบนมือถือโดยตรง 1 รายการต่อ 1 ช่อง
+  // ไม่รวม/ตัดข้อมูลก่อนส่ง เพื่อให้ Google Sheets ได้ค่าตรงกับที่จิ้มจริง
   const payload={
     action:'saveSurveyCells',
     args:[changes]
@@ -381,7 +385,7 @@ async function saveToGas(){
       mode:'no-cors',
       redirect:'follow'
     });
-    setStatus(`บันทึกคำสั่งแล้ว ${changes.length} รายการ — กลับคอมแล้วกดรีเฟรช/โหลดข้อมูลจากระบบหลักได้เลย`,'ok');
+    setStatus(`ส่งผลสำรวจ ${changes.length} รายการแล้ว — Google Sheets จะรับค่าตามที่จิ้มไว้`,'ok');
   }catch(err){
     console.error(err);
     setStatus('ส่งข้อมูลไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง','err');
