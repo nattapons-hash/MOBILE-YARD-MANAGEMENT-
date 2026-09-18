@@ -338,17 +338,75 @@ function renderAll(){
 document.getElementById('mode').addEventListener('change',e=>{mode=e.target.value;renderAll()});
 document.getElementById('addCustom').onclick=()=>addCustomMode(document.getElementById('customName').value);
 document.getElementById('customName').addEventListener('keydown',e=>{if(e.key==='Enter') addCustomMode(e.target.value)});
-document.getElementById('clear').onclick=()=>{
-  const before=selected.size;
-  // ล้างข้อมูลที่จิ้มไว้ทั้งหมด รวมถึงทุก Block ที่เคยเลือกไว้
-  // เพื่อให้ส่วน "สรุปชุดที่จะบันทึก" ถูกเคลียร์พร้อมกันทันที
-  for(const key of [...selected.keys()]){
-    const [z] = key.split('|');
-    if(z === zone) selected.delete(key);
+function confirmClearCurrentZone(){
+  const zoneKeys=[...selected.keys()].filter(k=>{
+    const [bk]=k.split('|');
+    return selectedBlocks.has(bk);
+  });
+  const before=zoneKeys.length;
+
+  if(!before){
+    setStatus('โซนนี้ยังไม่มีข้อมูลที่เลือก');
+    return;
   }
-  renderAll();
-  setStatus(before?'ล้างข้อมูลที่เลือกทั้งหมดแล้ว':'ไม่มีรายการให้ล้าง');
-};
+
+  const ok=window.confirm(
+    `ยืนยันการล้างข้อมูลที่เลือกของโซน ${zone} ?\\n\\n` +
+    `ระบบจะบันทึกข้อมูลปัจจุบันของโซนนี้ลง Google Sheets ก่อนดำเนินการต่อ`
+  );
+
+  if(!ok){
+    setStatus('ยกเลิกการล้างข้อมูล');
+    return;
+  }
+
+  // ยืนยันแล้ว = บันทึกข้อมูลปัจจุบันของโซนนี้ลง Google Sheets
+  saveCurrentZoneBeforeClear(zoneKeys);
+}
+
+async function saveCurrentZoneBeforeClear(zoneKeys){
+  const btn=document.getElementById('clear');
+  const saveBtn=document.getElementById('save');
+  btn.disabled=true;
+  saveBtn.disabled=true;
+  btn.textContent='กำลังบันทึก...';
+  setStatus(`กำลังบันทึกข้อมูลปัจจุบันของโซน ${zone} ลง Google Sheets...`);
+
+  // ส่งข้อมูลที่มีอยู่จริงในมือถือของโซนนี้ขึ้น GAS
+  const changes=zoneKeys.map(key=>{
+    const [z,bk,colStr]=key.split('|');
+    return {
+      zone:z,
+      blockKey:bk,
+      colNum:Number(colStr),
+      mode:selected.get(key)
+    };
+  });
+
+  try{
+    await fetch(GAS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'saveSurveyCells',
+        args:[changes]
+      }),
+      mode:'no-cors',
+      redirect:'follow'
+    });
+
+    setStatus(`บันทึกข้อมูลปัจจุบันของโซน ${zone} ลง Google Sheets แล้ว`,'ok');
+  }catch(err){
+    console.error(err);
+    setStatus('บันทึก Google Sheets ไม่สำเร็จ — ข้อมูลในมือถือยังไม่ถูกล้าง','err');
+  }finally{
+    btn.disabled=false;
+    saveBtn.disabled=false;
+    btn.textContent='ล้างที่เลือก';
+  }
+}
+
+document.getElementById('clear').onclick=confirmClearCurrentZone;
 
 function setStatus(msg,type=''){
   const el=document.getElementById('status');
@@ -385,7 +443,7 @@ async function saveToGas(){
       mode:'no-cors',
       redirect:'follow'
     });
-    setStatus(`ส่งผลสำรวจ ${changes.length} รายการแล้ว — Google Sheets จะรับค่าตามที่จิ้มไว้`,'ok');
+    setStatus(`บันทึกผลสำรวจ ${changes.length} รายการแล้ว — ส่งค่าตามที่จิ้มขึ้น Google Sheets`,'ok');
   }catch(err){
     console.error(err);
     setStatus('ส่งข้อมูลไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง','err');
