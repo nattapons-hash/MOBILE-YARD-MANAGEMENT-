@@ -205,9 +205,9 @@ function renderZones(){
     b.innerHTML=cfg.label.replace(' (','<small> (')+'</small>';
     b.onclick=()=>{
       zone=key;
-      const valid=new Set(zoneConfigs[zone].blocks.map(x=>x.key));
-      selectedBlocks=new Set([...selectedBlocks].filter(x=>valid.has(x)));
-      if(!selectedBlocks.size) selectedBlocks.add(zoneConfigs[zone].blocks[0].key);
+      // เปลี่ยนโซนแล้วเลือกทุกบล็อกของโซนนั้นอัตโนมัติ
+      // ผู้ใช้สามารถจิ้มบล็อกที่ไม่ต้องการออกเองได้
+      selectedBlocks=new Set(zoneConfigs[zone].blocks.map(x=>x.key));
       renderAll();
     };
     el.appendChild(b);
