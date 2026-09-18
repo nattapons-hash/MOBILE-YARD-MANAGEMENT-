@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Yard Mobile Survey</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#eef3f8;color:#1e293b;font-family:"Segoe UI",Tahoma,sans-serif}
+  body{min-height:100vh}
+  button,select,input{font:inherit}
+  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .app{width:100%;max-width:480px;margin:0 auto;padding:10px 10px calc(18px + env(safe-area-inset-bottom))}
+  .head{background:#0f172a;color:#fff;border-radius:14px;padding:13px 14px;margin-bottom:9px;box-shadow:0 4px 12px rgba(15,23,42,.15)}
+  .head h1{font-size:18px;margin:0 0 3px;font-weight:900}
+  .head p{font-size:11px;color:#cbd5e1;margin:0;line-height:1.45}
+  .card{background:#fff;border:1px solid #d7e0ea;border-radius:12px;padding:9px;margin-bottom:8px;box-shadow:0 2px 8px rgba(31,48,71,.05)}
+  .label{font-size:12px;font-weight:900;color:#334155;margin-bottom:5px}
+  .zones,.blocks{display:grid;gap:6px}
+  .zones{grid-template-columns:repeat(3,1fr)}
+  .blocks{grid-template-columns:repeat(4,1fr)}
+  .zone-btn,.block-btn{border:1px solid #cbd5e1;background:#f8fafc;color:#334155;border-radius:8px;font-weight:900;min-height:40px;cursor:pointer}
+  .zone-btn.active{background:#dbeafe;border-color:#60a5fa;color:#1d4ed8}
+  .block-btn.active{background:#e0e7ff;border-color:#818cf8;color:#4338ca}
+  .mode-row{display:grid;grid-template-columns:1fr;gap:6px}
+  .mode-select{width:100%;height:40px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font-weight:800;padding:0 9px}
+  .custom-row{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:6px}
+  .custom-input{height:38px;border:1px solid #cbd5e1;border-radius:8px;padding:0 9px;outline:none}
+  .custom-btn{height:38px;border:1px solid #0f766e;border-radius:8px;background:#f0fdfa;color:#0f766e;font-weight:900;padding:0 12px}
+  .info{font-size:11px;color:#64748b;line-height:1.5}
+  .info strong{color:#334155}
+  .keypad-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .count{font-size:11px;font-weight:900;padding:4px 8px;border-radius:999px;background:#f1f5f9;color:#475569}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .col-btn{height:42px;border:1px solid #cbd5e1;border-radius:7px;background:#f8fafc;color:#334155;font-size:13px;font-weight:900;cursor:pointer}
+  .col-btn:active{transform:scale(.96)}
+  .col-btn.selected-empty{background:#dcfce7;border-color:#86efac;color:#166534}
+  .col-btn.selected-out{background:#dbeafe;border-color:#60a5fa;color:#1d4ed8}
+  .col-btn.selected-in{background:#ffedd5;border-color:#fb923c;color:#c2410c}
+  .col-btn.selected-mmt{background:#f3e8ff;border-color:#c084fc;color:#7e22ce}
+  .col-btn.selected-custom-4{background:#fce7f3;border-color:#f9a8d4;color:#be185d}
+  .col-btn.selected-custom-5{background:#fef3c7;border-color:#fcd34d;color:#b45309}
+  .col-btn.selected-custom-6{background:#ccfbf1;border-color:#5eead4;color:#0f766e}
+  .col-btn.selected-custom-7{background:#e0e7ff;border-color:#a5b4fc;color:#4338ca}
+  .col-btn.selected-custom-8{background:#fae8ff;border-color:#e879f9;color:#a21caf}
+  .col-btn.selected-custom-9{background:#ecfccb;border-color:#bef264;color:#4d7c0f}
+  .col-btn.selected-custom-10{background:#cffafe;border-color:#67e8f9;color:#0e7490}
+  .col-btn.selected-custom-11{background:#ffedd5;border-color:#fdba74;color:#c2410c}
+  .col-btn.selected-custom-12{background:#ede9fe;border-color:#c4b5fd;color:#6d28d9}
+  .col-btn.selected-custom-13{background:#f0fdf4;border-color:#86efac;color:#15803d}
+  .col-btn.selected-custom-14{background:#f1f5f9;border-color:#94a3b8;color:#334155}
+  .col-btn.selected-custom-15{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .save{min-height:46px;border:0;border-radius:9px;background:#16a34a;color:#fff;font-weight:900}
+  .clear{min-height:46px;border:1px solid #ef4444;border-radius:9px;background:#fff1f2;color:#b91c1c;font-weight:900}
+  .status{font-size:12px;line-height:1.45;padding:8px 10px;border-radius:8px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
+  .status.ok{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
+  .status.err{background:#fff1f2;color:#991b1b;border-color:#fecdd3}
+  .summary{font-size:12px;line-height:1.55;color:#475569}
+  .summary-row{display:flex;justify-content:space-between;border-bottom:1px dashed #e2e8f0;padding:5px 0}
+  .summary-row:last-child{border-bottom:0}
+  .danger-note{font-size:10px;color:#94a3b8;margin-top:5px;line-height:1.4}
+  @media(max-width:360px){
+    .app{padding-left:6px;padding-right:6px}
+    .grid{gap:4px}
+    .col-btn{height:39px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="head">
+    <h1>📱 สำรวจพื้นที่ด้วยมือถือ</h1>
+    <p>เลือกโซน → เลือกได้หลายบล็อก → เลือกโหมด → จิ้มคอลัมน์ แล้วกด “บันทึกผลสำรวจ”</p>
+  </div>
+
+  <div class="card">
+    <div class="label">1. เลือกโซน</div>
+    <div class="zones" id="zones"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">2. เลือกบล็อก (เลือกพร้อมกันได้หลายบล็อก)</div>
+    <div class="blocks" id="blocks"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">3. เลือกโหมดสำรวจ</div>
+    <div class="mode-row">
+      <select class="mode-select" id="mode"></select>
+    </div>
+    <div class="custom-row">
+      <input class="custom-input" id="customName" placeholder="เพิ่มโหมด เช่น TOYOTA" autocomplete="off">
+      <button class="custom-btn" id="addCustom">+ เพิ่ม</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="info" id="info"></div>
+  </div>
+
+  <div class="card">
+    <div class="keypad-title">
+      <div class="label" style="margin:0">4. จิ้มคอลัมน์</div>
+      <div class="count" id="count">เลือก 0 คอลัมน์</div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="danger-note">แตะซ้ำที่เลขเดิมเพื่อยกเลิกการเลือก</div>
+  </div>
+
+  <div class="card">
+    <div class="label">สรุปชุดที่จะบันทึก</div>
+    <div class="summary" id="summary"></div>
+  </div>
+
+  <div class="card">
+    <div class="actions">
+      <button class="save" id="save">☁️ บันทึกผลสำรวจ</button>
+      <button class="clear" id="clear">ล้างที่เลือก</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="status" id="status">พร้อมสำรวจ — ยังไม่มีการส่งข้อมูลขึ้น Google Sheets</div>
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxW5z6yzZyFTlW88N-kwEJ6SV-EW01M1ZnQeZ3Pg-p1OrAt08qzx6RDZJdm56Qrw6A/exec';
+
+const zoneConfigs = {
+  S: {
+    label:'ฝั่งใต้ (S)', maxCols:65,
+    blocks:[
+      {key:'A',label:'A',maxCols:65},{key:'B',label:'B',maxCols:65},
+      {key:'C',label:'C',maxCols:65},{key:'D',label:'D',maxCols:65}
+    ]
+  },
+  MID: {
+    label:'หน้าตึก (MID)', maxCols:67,
+    blocks:[
+      {key:'E',label:'E',maxCols:67},{key:'F',label:'F',maxCols:67},
+      {key:'G',label:'G',maxCols:67},{key:'H',label:'H',maxCols:19}
+    ]
+  },
+  N: {
+    label:'ฝั่งเหนือ (N)', maxCols:77,
+    blocks:[
+      {key:'J',label:'J',maxCols:77},{key:'K',label:'K',maxCols:77},
+      {key:'L',label:'L',maxCols:77},{key:'M',label:'M',maxCols:77},
+      {key:'N',label:'N',maxCols:77},{key:'O',label:'O',maxCols:77},
+      {key:'S',label:'S',maxCols:77}
+    ]
+  }
+};
+
+const baseModes = [
+  {key:'empty',label:'แถวว่าง'},
+  {key:'out',label:'หันออกทะเล'},
+  {key:'in',label:'หันเข้าฝั่ง'},
+  {key:'mmt',label:'MMT'}
+];
+const customModes = {};
+let zone = 'S';
+let selectedBlocks = new Set(['A']);
+let mode = 'empty';
+const selected = new Map(); // key = block|col, value = mode
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function modeLabel(key){
+  if(baseModes.find(x=>x.key===key)) return baseModes.find(x=>x.key===key).label;
+  return customModes[key]?.label || key;
+}
+function modeClass(key){
+  if(key==='empty') return 'selected-empty';
+  if(key==='out') return 'selected-out';
+  if(key==='in') return 'selected-in';
+  if(key==='mmt') return 'selected-mmt';
+  const idx = customModes[key]?.colorIndex || 4;
+  return 'selected-custom-'+idx;
+}
+function addCustomMode(name){
+  name = String(name||'').trim();
+  if(!name) return;
+  const key = 'custom:'+name;
+  if(customModes[key]){
+    mode = key;
+    renderMode();
+    return;
+  }
+  const used = new Set(Object.values(customModes).map(x=>x.colorIndex));
+  let idx = 4;
+  while(used.has(idx) && idx<=15) idx++;
+  if(idx>15) idx = 4 + (Object.keys(customModes).length % 12);
+  customModes[key] = {label:name,colorIndex:idx};
+  mode = key;
+  document.getElementById('customName').value = '';
+  renderMode();
+  renderAll();
+}
+function renderZones(){
+  const el=document.getElementById('zones');
+  el.innerHTML='';
+  Object.entries(zoneConfigs).forEach(([key,cfg])=>{
+    const b=document.createElement('button');
+    b.className='zone-btn'+(zone===key?' active':'');
+    b.innerHTML=cfg.label.replace(' (','<small> (')+'</small>';
+    b.onclick=()=>{
+      zone=key;
+      const valid=new Set(zoneConfigs[zone].blocks.map(x=>x.key));
+      selectedBlocks=new Set([...selectedBlocks].filter(x=>valid.has(x)));
+      if(!selectedBlocks.size) selectedBlocks.add(zoneConfigs[zone].blocks[0].key);
+      renderAll();
+    };
+    el.appendChild(b);
+  });
+}
+function renderBlocks(){
+  const el=document.getElementById('blocks');
+  el.innerHTML='';
+  zoneConfigs[zone].blocks.forEach(bcfg=>{
+    const b=document.createElement('button');
+    b.className='block-btn'+(selectedBlocks.has(bcfg.key)?' active':'');
+    b.textContent=bcfg.label;
+    b.onclick=()=>{
+      if(selectedBlocks.has(bcfg.key)){
+        if(selectedBlocks.size === 1) return;
+        selectedBlocks.delete(bcfg.key);
+      }else{
+        selectedBlocks.add(bcfg.key);
+      }
+      renderAll();
+    };
+    el.appendChild(b);
+  });
+}
+function renderMode(){
+  const el=document.getElementById('mode');
+  el.innerHTML='';
+  baseModes.forEach(m=>{
+    const o=document.createElement('option');o.value=m.key;o.textContent=m.label;el.appendChild(o);
+  });
+  Object.entries(customModes).forEach(([key,m])=>{
+    const o=document.createElement('option');o.value=key;o.textContent=m.label;el.appendChild(o);
+  });
+  el.value=mode;
+}
+function renderGrid(){
+  const cfg=zoneConfigs[zone];
+  const blocks=zoneConfigs[zone].blocks.filter(b=>selectedBlocks.has(b.key));
+  const max=Math.max(...blocks.map(b=>b.maxCols));
+  const el=document.getElementById('grid');
+  el.innerHTML='';
+  for(let c=1;c<=max;c++){
+    const btn=document.createElement('button');
+    btn.className='col-btn';
+    const usableBlocks=blocks.filter(b=>c<=b.maxCols);
+    if(!usableBlocks.length){
+      btn.disabled=true;
+      btn.style.opacity='.35';
+      btn.textContent=c;
+      el.appendChild(btn);
+      continue;
+    }
+
+    const pickedModes=usableBlocks.map(b=>selected.get(b.key+'|'+c)||'');
+    const allPicked=pickedModes.every(x=>x===mode);
+    const mixed=pickedModes.some(Boolean) && !allPicked;
+    if(allPicked) btn.classList.add(modeClass(mode));
+    else if(mixed) btn.classList.add('selected-custom-14');
+
+    btn.textContent=c;
+    btn.title='แตะเพื่อเลือกคอลัมน์นี้ใน '+usableBlocks.map(b=>b.label).join(', ');
+    btn.onclick=()=>{
+      const shouldClear=usableBlocks.every(b=>selected.get(b.key+'|'+c)===mode);
+      usableBlocks.forEach(b=>{
+        const key=b.key+'|'+c;
+        if(shouldClear) selected.delete(key);
+        else selected.set(key,mode);
+      });
+      renderGrid();
+      renderSummary();
+    };
+    el.appendChild(btn);
+  }
+  const count=[...selected.keys()].filter(k=>{
+    const bk=k.split('|')[0];
+    return selectedBlocks.has(bk);
+  }).length;
+  document.getElementById('count').textContent='เลือก '+count+' รายการ';
+}
+function compressRanges(items){
+  const sorted=[...items].sort((a,b)=>a-b);
+  const out=[];
+  if(!sorted.length) return out;
+  let s=sorted[0],p=sorted[0];
+  for(let i=1;i<=sorted.length;i++){
+    const x=sorted[i];
+    if(x===p+1){p=x;continue}
+    out.push(s===p?String(s):s+'-'+p);
+    if(x!==undefined){s=x;p=x}
+  }
+  return out;
+}
+function buildPayload(){
+  const groups=new Map();
+  selected.forEach((m,key)=>{
+    const [bk,c]=key.split('|');
+    const gkey=zone+'|'+bk+'|'+m;
+    if(!groups.has(gkey)) groups.set(gkey,{zone,blockKey:bk,mode:m,cols:[]});
+    groups.get(gkey).cols.push(Number(c));
+  });
+  return [...groups.values()].map(g=>({
+    zone:g.zone,blockKey:g.blockKey,mode:g.mode,
+    ranges:compressRanges(g.cols),
+    columns:g.cols.sort((a,b)=>a-b)
+  }));
+}
+function renderInfo(){
+  const cfg=zoneConfigs[zone];
+  const blocks=zoneConfigs[zone].blocks.filter(b=>selectedBlocks.has(b.key));
+  const max=Math.max(...blocks.map(b=>b.maxCols));
+  document.getElementById('info').innerHTML=
+    `<strong>${esc(cfg.label)}</strong> · Block <strong>${esc(blocks.map(b=>b.label).join(', '))}</strong> · `+
+    `คอลัมน์ 1–${max} · โหมด <strong>${esc(modeLabel(mode))}</strong><br>`+
+    `แตะเลข 1 ครั้ง = เลือกคอลัมน์เดียวกันทุกบล็อกที่เลือก`;
+}
+function renderSummary(){
+  const el=document.getElementById('summary');
+  const payload=buildPayload();
+  if(!payload.length){el.innerHTML='<span style="color:#94a3b8">ยังไม่มีข้อมูลที่เลือก</span>';return}
+  el.innerHTML=payload.map(g=>
+    `<div class="summary-row"><span><strong>${esc(g.zone)}</strong> · Block ${esc(g.blockKey)} · ${esc(modeLabel(g.mode))}</span>`+
+    `<strong>${esc(g.ranges.join(', '))}</strong></div>`
+  ).join('');
+}
+function renderAll(){
+  renderZones();renderBlocks();renderMode();renderInfo();renderGrid();renderSummary();
+}
+document.getElementById('mode').addEventListener('change',e=>{mode=e.target.value;renderAll()});
+document.getElementById('addCustom').onclick=()=>addCustomMode(document.getElementById('customName').value);
+document.getElementById('customName').addEventListener('keydown',e=>{if(e.key==='Enter') addCustomMode(e.target.value)});
+document.getElementById('clear').onclick=()=>{
+  const before=selected.size;
+  [...selected.keys()].forEach(k=>{
+    const bk=k.split('|')[0];
+    if(selectedBlocks.has(bk)) selected.delete(k);
+  });
+  renderAll();
+  setStatus(before?'ล้างการเลือกของ Block '+[...selectedBlocks].join(', ')+' แล้ว':'ไม่มีรายการให้ล้าง');
+};
+
+function setStatus(msg,type=''){
+  const el=document.getElementById('status');
+  el.className='status '+type;
+  el.textContent=msg;
+}
+
+async function saveToGas(){
+  const changes=[...selected.entries()].map(([key,m])=>{
+    const [blockKey,colNum]=key.split('|');
+    return {zone,blockKey,colNum:Number(colNum),mode:m};
+  });
+  if(!changes.length){
+    setStatus('ยังไม่มีข้อมูลให้บันทึก','err');return;
+  }
+
+  const btn=document.getElementById('save');
+  btn.disabled=true;btn.textContent='☁️ กำลังบันทึก...';
+  setStatus(`กำลังส่ง ${changes.length} รายการขึ้น Google Sheets...`);
+
+  const payload={
+    action:'saveSurveyCells',
+    args:[changes]
+  };
+
+  try{
+    // ใช้ POST ชุดเดียว ลดการยิง GAS และไม่ยิงทุกครั้งที่จิ้ม
+    await fetch(GAS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload),
+      mode:'no-cors',
+      redirect:'follow'
+    });
+    setStatus(`บันทึกคำสั่งแล้ว ${changes.length} รายการ — กลับคอมแล้วกดรีเฟรช/โหลดข้อมูลจากระบบหลักได้เลย`,'ok');
+  }catch(err){
+    console.error(err);
+    setStatus('ส่งข้อมูลไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วกดบันทึกอีกครั้ง','err');
+  }finally{
+    btn.disabled=false;btn.textContent='☁️ บันทึกผลสำรวจ';
+  }
+}
+
+document.getElementById('save').onclick=saveToGas;
+renderAll();
+</script>
+</body>
+</html>
