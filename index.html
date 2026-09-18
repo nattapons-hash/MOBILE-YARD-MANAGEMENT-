@@ -395,10 +395,28 @@ async function saveCurrentZoneBeforeClear(zoneKeys){
       redirect:'follow'
     });
 
-    setStatus(`บันทึกข้อมูลปัจจุบันของโซน ${zone} ลง Google Sheets แล้ว`,'ok');
+    // บันทึกข้อมูลปัจจุบันเสร็จแล้ว จึงสั่งล้างข้อมูลของโซนนี้ใน Google Sheets
+    setStatus(`บันทึกข้อมูลปัจจุบันแล้ว กำลังล้างข้อมูลโซน ${zone} ใน Google Sheets...`);
+
+    await fetch(GAS_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({
+        action:'clearSurveyZone',
+        args:[zone]
+      }),
+      mode:'no-cors',
+      redirect:'follow'
+    });
+
+    // ล้างข้อมูลในมือถือด้วย
+    zoneKeys.forEach(k=>selected.delete(k));
+    renderAll();
+    setStatus(`ล้างข้อมูลโซน ${zone} ใน Google Sheets เรียบร้อยแล้ว`,'ok');
+
   }catch(err){
     console.error(err);
-    setStatus('บันทึก Google Sheets ไม่สำเร็จ — ข้อมูลในมือถือยังไม่ถูกล้าง','err');
+    setStatus('ดำเนินการกับ Google Sheets ไม่สำเร็จ — ข้อมูลในมือถือยังไม่ถูกล้าง','err');
   }finally{
     btn.disabled=false;
     saveBtn.disabled=false;
