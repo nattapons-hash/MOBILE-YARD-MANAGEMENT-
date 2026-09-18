@@ -70,11 +70,6 @@
 </head>
 <body>
 <div class="app">
-  <div class="head">
-    <h1>📱 สำรวจพื้นที่ด้วยมือถือ</h1>
-    <p>เลือกโซน → เลือกได้หลายบล็อก → เลือกโหมด → จิ้มคอลัมน์ แล้วกด “บันทึกผลสำรวจ”</p>
-  </div>
-
   <div class="card">
     <div class="label">1. เลือกโซน</div>
     <div class="zones" id="zones"></div>
@@ -101,6 +96,13 @@
   </div>
 
   <div class="card">
+    <div class="actions">
+      <button class="save" id="save">☁️ บันทึกผลสำรวจ</button>
+      <button class="clear" id="clear">ล้างที่เลือก</button>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="keypad-title">
       <div class="label" style="margin:0">4. จิ้มคอลัมน์</div>
       <div class="count" id="count">เลือก 0 คอลัมน์</div>
@@ -112,13 +114,6 @@
   <div class="card">
     <div class="label">สรุปชุดที่จะบันทึก</div>
     <div class="summary" id="summary"></div>
-  </div>
-
-  <div class="card">
-    <div class="actions">
-      <button class="save" id="save">☁️ บันทึกผลสำรวจ</button>
-      <button class="clear" id="clear">ล้างที่เลือก</button>
-    </div>
   </div>
 
   <div class="card">
